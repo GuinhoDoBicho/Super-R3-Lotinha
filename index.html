@@ -17,7 +17,7 @@
             padding: 20px;
             margin: 0;
             min-height: 100vh;
-            user-select: none; /* Impede seleção de texto */
+            user-select: none;
         }
 
         /* TELA DE LOGIN */
@@ -51,7 +51,7 @@
             font-weight: bold;
         }
 
-        /* CONTEÚDO PRINCIPAL (Escondido até logar) */
+        /* CONTEÚDO PRINCIPAL */
         #conteudoPrincipal {
             display: none; 
             width: 100%;
@@ -70,7 +70,6 @@
 
         h1 { color: #f1c40f; margin-bottom: 10px; text-shadow: 2px 2px 4px #000; }
 
-        /* Grade de Números e Botões */
         .grid-numeros {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
@@ -99,9 +98,9 @@
 
         input[type="number"] { padding: 10px; border-radius: 5px; border: none; width: 100px; text-align: center; }
 
-        /* Estilo do Popup (Modal) */
+        /* Estilo do Popup */
         #modalVitoria {
-            display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
+            display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
         }
 
@@ -135,7 +134,7 @@
         </div>
     </div>
 
-    <!-- CONTEÚDO PRINCIPAL (Começa oculto) -->
+    <!-- CONTEÚDO PRINCIPAL -->
     <div id="conteudoPrincipal">
         <div class="container">
             <h1>Super R3 Lotinha Do Guinho</h1>
@@ -161,7 +160,6 @@
         </div>
     </div>
 
-    <!-- Popup de Vitória -->
     <div id="modalVitoria">
         <div class="modal-content">
             <h2 style="margin-top:0">💰 PARABÉNS! 💰</h2>
@@ -178,26 +176,39 @@
             if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73) || (e.ctrlKey && e.keyCode == 85)) return false;
         };
 
-        // --- LÓGICA DE SENHA ---
+        // --- LÓGICA DE PERSISTÊNCIA E SENHA ---
+        const SENHA_CORRETA = "SUPERR3";
+        const STORAGE_KEY = "auth_super_r3_guinho";
+
+        // Verifica se já logou antes ao carregar a página
+        window.onload = function() {
+            const logado = localStorage.getItem(STORAGE_KEY);
+            if (logado === "true") {
+                liberarSistema();
+            }
+        };
+
         function verificarSenha() {
             const senhaDigitada = document.getElementById('senhaInput').value;
-            const senhaCorreta = "SUPERR3";
-
-            if (senhaDigitada === senhaCorreta) {
-                document.getElementById('telaLogin').style.display = 'none';
-                document.getElementById('conteudoPrincipal').style.display = 'block';
-                init(); // Inicializa o sistema após o login
+            if (senhaDigitada === SENHA_CORRETA) {
+                localStorage.setItem(STORAGE_KEY, "true"); // Salva no dispositivo
+                liberarSistema();
             } else {
-                alert("Senha Incorreta! Entre em contato com Guinho Lotofacil.");
+                alert("Senha Incorreta!");
             }
         }
 
-        // Permitir dar "Enter" no campo de senha
-        document.getElementById('senhaInput').addEventListener('keypress', function (e) {
+        function liberarSistema() {
+            document.getElementById('telaLogin').style.display = 'none';
+            document.getElementById('conteudoPrincipal').style.display = 'block';
+            init();
+        }
+
+        document.getElementById('senhaInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') verificarSenha();
         });
 
-        // --- LÓGICA DO SISTEMA ---
+        // --- LÓGICA DO SISTEMA (MANTIDA) ---
         let excluidos = [];
         let sorteados = [];
         let combinacoesGeradas = [];
@@ -223,7 +234,7 @@
         function init() {
             const grid = document.getElementById('gridIniciais');
             const gridConf = document.getElementById('gridConferidor');
-            grid.innerHTML = ""; gridConf.innerHTML = ""; // Limpa para não duplicar
+            grid.innerHTML = ""; gridConf.innerHTML = "";
             for(let i=1; i<=25; i++) {
                 let btn = document.createElement('button');
                 btn.className = 'num-btn';
@@ -304,7 +315,13 @@
         }
 
         function fecharModal() { document.getElementById('modalVitoria').style.display = "none"; }
-        function limparTudo() { location.reload(); }
+        function limparTudo() { 
+            // Limpa seleções sem apagar a senha do dispositivo
+            excluidos = []; sorteados = []; combinacoesGeradas = [];
+            init();
+            document.getElementById('listaJogos').innerHTML = "";
+            document.getElementById('infoPremio').innerHTML = "";
+        }
 
         function compartilhar() {
             if (combinacoesGeradas.length === 0) return;
